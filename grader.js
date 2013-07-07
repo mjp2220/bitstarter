@@ -63,11 +63,21 @@ var clone = function(fn) {
     return fn.bind({});
 };
 
-var finishCall = function() {
-    var checkJson = checkHtmlFile(program.file, program.checks);
-    var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
+var htmlfilehandling = function(url, checks) {
+    var response2console = function(result, response) {
+	if (result instanceof Error) {
+	console.error('Error');
+	}
+	else {
+	fs.writeFileSync(HTMLFILE_DEFAULT,result);
+	var checkJson = checkHtmlFile(HTMLFILE_DEFAULT, program.checks);
+	var outJson = JSON.stringify(checkJson, null, 4);
+	console.log(outJson);
+	}
+    };
+    return response2console;
 };
+
 if(require.main == module) {
     program
 	.option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
@@ -76,11 +86,8 @@ if(require.main == module) {
        .parse(process.argv);
     if (program.url !== null) {
 	var x = program.url;
-	var file1  = rest.get(x);
-	var file2 = fs.writeFileSync(HTMLFILE_DEFAULT,file2);
-	var checkJson = checkHtmlFile(file2, program.checks);
-	var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
+	var response2console = htmlfilehandling(x,program.checks);
+	var file1  = rest.get(x).on('complete', response2console);
     }
     else {
 	var checkJson1 = checkHtmlFile(program.file, program.checks);
